@@ -2,7 +2,7 @@ class Rt < Formula
   desc "Remote terminal accessible from your phone via QR code"
   homepage "https://github.com/rafgirao/homebrew-rt"
   url "https://github.com/rafgirao/homebrew-rt/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "c79af34163cdfbcfac6400b5b407bb1a75febe3b0d1599d2da36961654a11fed"
+  sha256 "462b971ac058a24403369e2c8aaaa80b4db50f56a6c7b8e3be599db43688e4bd"
   license "MIT"
 
   depends_on "tmux"
