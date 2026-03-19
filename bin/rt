@@ -32,7 +32,7 @@ rt_check_update() {
 
   # Fetch latest tag from GitHub (background-friendly, with timeout)
   local latest
-  latest=$(curl -sf --max-time 3 "https://api.github.com/repos/rafgirao/homebrew-remote-terminal/tags" 2>/dev/null \
+  latest=$(curl -sf --max-time 3 "https://api.github.com/repos/rafgirao/homebrew-remote/tags" 2>/dev/null \
     | grep -o '"name": *"[^"]*"' | head -1 | cut -d'"' -f4 | sed 's/^v//')
 
   if [[ -z "$latest" ]]; then
@@ -58,7 +58,7 @@ rt_prompt_update() {
   case "${answer:-Y}" in
     [Yy]|"")
       echo "  Updating..."
-      brew upgrade rafgirao/remote-terminal/remote-terminal 2>/dev/null && rm -f "${RT_CACHE_DIR}/update_available" && echo "  Updated to v${latest}!" || echo "  Update failed. Try: brew upgrade rafgirao/rt/rt"
+      brew upgrade rafgirao/remote/terminal 2>/dev/null && rm -f "${RT_CACHE_DIR}/update_available" && echo "  Updated to v${latest}!" || echo "  Update failed. Try: brew upgrade rafgirao/rt/rt"
       echo ""
       ;;
     *)
