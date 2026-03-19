@@ -23,7 +23,7 @@ Every session is protected by a random 128-bit token in the URL — no one can a
 ## Install
 
 ```bash
-brew install rafgirao/rt
+brew install rafgirao/rt/rt
 ```
 
 > On first run, `rt` will ask which tunnel provider you want to use (ngrok, cloudflared, or both) and install it automatically.
