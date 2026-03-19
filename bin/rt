@@ -1,7 +1,163 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+RT_VERSION="0.1.0"
 RT_SHARE="$(cd "$(dirname "$0")/../share/rt" && pwd)"
+RT_CACHE_DIR="${HOME}/.cache/rt"
+
+# --- Update Check ---
+
+rt_check_update() {
+  mkdir -p "$RT_CACHE_DIR"
+  local stamp="${RT_CACHE_DIR}/last_update_check"
+  local now
+  now=$(date +%s)
+
+  # Check at most once per day
+  if [[ -f "$stamp" ]]; then
+    local last
+    last=$(cat "$stamp")
+    if (( now - last < 86400 )); then
+      # Show cached result if available
+      if [[ -f "${RT_CACHE_DIR}/update_available" ]]; then
+        local latest
+        latest=$(cat "${RT_CACHE_DIR}/update_available")
+        rt_prompt_update "$latest"
+      fi
+      return
+    fi
+  fi
+
+  echo "$now" > "$stamp"
+
+  # Fetch latest tag from GitHub (background-friendly, with timeout)
+  local latest
+  latest=$(curl -sf --max-time 3 "https://api.github.com/repos/rafgirao/homebrew-rt/tags" 2>/dev/null \
+    | grep -o '"name": *"[^"]*"' | head -1 | cut -d'"' -f4 | sed 's/^v//')
+
+  if [[ -z "$latest" ]]; then
+    return
+  fi
+
+  if [[ "$latest" != "$RT_VERSION" ]]; then
+    echo "$latest" > "${RT_CACHE_DIR}/update_available"
+    rt_prompt_update "$latest"
+  else
+    rm -f "${RT_CACHE_DIR}/update_available"
+  fi
+}
+
+rt_prompt_update() {
+  local latest="$1"
+  echo ""
+  echo "  ╭─────────────────────────────────────────────╮"
+  echo "  │  Update available: v${RT_VERSION} → v${latest}            │"
+  echo "  ╰─────────────────────────────────────────────╯"
+  echo ""
+  read -r -p "  Update now? [Y/n] " answer </dev/tty
+  case "${answer:-Y}" in
+    [Yy]|"")
+      echo "  Updating..."
+      brew upgrade rafgirao/rt/rt 2>/dev/null && rm -f "${RT_CACHE_DIR}/update_available" && echo "  Updated to v${latest}!" || echo "  Update failed. Try: brew upgrade rafgirao/rt/rt"
+      echo ""
+      ;;
+    *)
+      echo ""
+      ;;
+  esac
+}
+
+# --- Setup ---
+
+cmd_setup() {
+  echo ""
+  echo "  ╭─────────────────────────────────────────────╮"
+  echo "  │         Remote Terminal — Setup              │"
+  echo "  ╰─────────────────────────────────────────────╯"
+  echo ""
+
+  local has_ngrok=0 has_cloudflared=0
+  command -v ngrok &>/dev/null && has_ngrok=1
+  command -v cloudflared &>/dev/null && has_cloudflared=1
+
+  if [[ $has_ngrok -eq 1 && $has_cloudflared -eq 1 ]]; then
+    echo "  Both ngrok and cloudflared are already installed."
+    echo ""
+    return
+  fi
+
+  echo "  A tunnel provider is required to expose your terminal."
+  echo ""
+  echo "  1) ngrok        — fast, requires free account"
+  echo "  2) cloudflared  — free, no account needed"
+  echo "  3) Both"
+  [[ $has_ngrok -eq 1 ]] && echo "     (ngrok already installed)"
+  [[ $has_cloudflared -eq 1 ]] && echo "     (cloudflared already installed)"
+  echo ""
+
+  read -r -p "  Choose [1/2/3]: " choice </dev/tty
+  echo ""
+
+  case "$choice" in
+    1)
+      if [[ $has_ngrok -eq 0 ]]; then
+        echo "  Installing ngrok..."
+        brew install ngrok 2>/dev/null || brew install --cask ngrok 2>/dev/null
+        echo ""
+        echo "  ngrok installed! Authenticate with:"
+        echo "    ngrok config add-authtoken <your-token>"
+        echo "    (get your token at https://dashboard.ngrok.com)"
+      else
+        echo "  ngrok is already installed."
+      fi
+      ;;
+    2)
+      if [[ $has_cloudflared -eq 0 ]]; then
+        echo "  Installing cloudflared..."
+        brew install cloudflared
+      else
+        echo "  cloudflared is already installed."
+      fi
+      ;;
+    3)
+      if [[ $has_ngrok -eq 0 ]]; then
+        echo "  Installing ngrok..."
+        brew install ngrok 2>/dev/null || brew install --cask ngrok 2>/dev/null
+      fi
+      if [[ $has_cloudflared -eq 0 ]]; then
+        echo "  Installing cloudflared..."
+        brew install cloudflared
+      fi
+      echo ""
+      echo "  Both installed! ngrok will be used first, cloudflared as fallback."
+      if [[ $has_ngrok -eq 0 ]]; then
+        echo "  Authenticate ngrok with:"
+        echo "    ngrok config add-authtoken <your-token>"
+        echo "    (get your token at https://dashboard.ngrok.com)"
+      fi
+      ;;
+    *)
+      echo "  Invalid choice. Run 'rt setup' again."
+      return 1
+      ;;
+  esac
+
+  # tmux.conf setup
+  echo ""
+  if ! grep -q 'window-size largest' ~/.tmux.conf 2>/dev/null; then
+    read -r -p "  Add 'set -g window-size largest' to ~/.tmux.conf? [Y/n] " tmux_answer </dev/tty
+    case "${tmux_answer:-Y}" in
+      [Yy]|"")
+        echo "set -g window-size largest" >> ~/.tmux.conf
+        echo "  Added to ~/.tmux.conf"
+        ;;
+    esac
+  fi
+
+  echo ""
+  echo "  Setup complete! Run 'rt' to start a session."
+  echo ""
+}
 
 # --- Helpers ---
 
@@ -136,6 +292,15 @@ rt_open_tab() {
 
 cmd_start() {
   local name="${1:-remote}"
+
+  # Check for tunnel provider
+  if ! command -v ngrok &>/dev/null && ! command -v cloudflared &>/dev/null; then
+    echo ""
+    echo "  No tunnel provider found. Run 'rt setup' to install one."
+    echo ""
+    exit 1
+  fi
+
   local piddir="/tmp/remote-terminal-${name}"
 
   if [[ -d "$piddir" ]]; then
@@ -253,16 +418,22 @@ cmd_stop() {
   echo "Session '${name}' stopped."
 }
 
+cmd_version() {
+  echo "rt v${RT_VERSION}"
+}
+
 cmd_help() {
   cat <<'EOF'
 Usage: rt [command] [name]
 
 Commands:
   rt [name]              Start session (default: "remote")
+  rt setup               Interactive setup (install tunnel provider)
   rt list|ls             List sessions
   rt qr [name]           Reprint QR + URL
   rt reconnect|rc [name] Relaunch tunnel for existing session
   rt stop [name|--all]   Stop session(s)
+  rt version             Show version
   rt help                Show this help
 EOF
 }
@@ -272,11 +443,19 @@ EOF
 cmd="${1:-}"
 shift 2>/dev/null || true
 
+# Check for updates before starting a session (non-blocking commands skip)
 case "$cmd" in
+  setup|help|--help|-h|version|--version|-v|list|ls|stop) ;;
+  *) rt_check_update ;;
+esac
+
+case "$cmd" in
+  setup)          cmd_setup ;;
   list|ls)        cmd_list ;;
   qr)             cmd_qr "$@" ;;
   reconnect|rc)   cmd_reconnect "$@" ;;
   stop)           cmd_stop "$@" ;;
+  version|--version|-v) cmd_version ;;
   help|--help|-h) cmd_help ;;
   *)              cmd_start "$cmd" ;;
 esac

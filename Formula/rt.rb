@@ -19,15 +19,11 @@ class Rt < Formula
 
   def caveats
     <<~EOS
-      To use rt, just run:
+      Run the interactive setup to install a tunnel provider:
+        rt setup
+
+      Then start a session:
         rt [session-name]
-
-      Dependencies not installed by Homebrew (install one):
-        - ngrok:       brew install ngrok
-        - cloudflared: brew install cloudflared
-
-      For best experience, add to your ~/.tmux.conf:
-        set -g window-size largest
     EOS
   end
 

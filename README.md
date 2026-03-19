@@ -27,13 +27,13 @@ brew tap rafgirao/rt
 brew install rt
 ```
 
-You also need a tunnel provider (at least one):
+Then run the interactive setup to install a tunnel provider:
 
 ```bash
-brew install ngrok        # preferred — faster setup
-# or
-brew install cloudflared  # free fallback, no account needed
+rt setup
 ```
+
+It will ask you to choose between **ngrok**, **cloudflared**, or both, and install automatically. It also configures tmux for you.
 
 ### Dependencies
 
@@ -48,6 +48,17 @@ Installed automatically by Homebrew:
 | `python@3` | Runs the clipboard bridge server |
 
 ## Usage
+
+### Setup
+
+```bash
+rt setup
+```
+
+Interactive wizard that:
+- Asks which tunnel provider to install (ngrok, cloudflared, or both)
+- Installs your choice via Homebrew
+- Configures `~/.tmux.conf` for multi-client support
 
 ### Start a session
 
@@ -130,11 +141,31 @@ Kills all processes (ttyd, Caddy, tunnel, clipboard server) and cleans up the se
 rt stop --all
 ```
 
+### Version
+
+```bash
+rt version
+```
+
 ### Help
 
 ```bash
 rt help
 ```
+
+## Auto-update
+
+When you run `rt`, it checks for new versions once per day. If an update is available, you'll see:
+
+```
+  ╭─────────────────────────────────────────────╮
+  │  Update available: v0.1.0 → v0.2.0          │
+  ╰─────────────────────────────────────────────╯
+
+  Update now? [Y/n]
+```
+
+Press **Enter** or **Y** to update automatically via `brew upgrade`. Press **N** to skip.
 
 ## Mobile Web UI
 
