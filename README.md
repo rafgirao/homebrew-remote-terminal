@@ -23,7 +23,7 @@ Every session is protected by a random 128-bit token in the URL — no one can a
 ## Install
 
 ```bash
-brew install rafgirao/rt/rt
+brew install rafgirao/remote-terminal
 ```
 
 > On first run, `rt` will ask which tunnel provider you want to use (ngrok, cloudflared, or both) and install it automatically.
@@ -248,7 +248,7 @@ Then restart tmux: `tmux kill-server` (this will close all tmux sessions).
 
 ```bash
 rt stop --all
-brew uninstall rt && brew untap rafgirao/rt
+brew uninstall remote-terminal && brew untap rafgirao/remote-terminal
 ```
 
 ## License

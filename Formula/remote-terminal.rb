@@ -1,8 +1,8 @@
-class Rt < Formula
+class RemoteTerminal < Formula
   desc "Remote terminal accessible from your phone via QR code"
-  homepage "https://github.com/rafgirao/homebrew-rt"
-  url "https://github.com/rafgirao/homebrew-rt/archive/refs/tags/v0.1.0.tar.gz"
-  sha256 "462b971ac058a24403369e2c8aaaa80b4db50f56a6c7b8e3be599db43688e4bd"
+  homepage "https://github.com/rafgirao/homebrew-remote-terminal"
+  url "https://github.com/rafgirao/homebrew-remote-terminal/archive/refs/tags/v0.1.0.tar.gz"
+  sha256 ""
   license "MIT"
 
   depends_on "tmux"
@@ -19,11 +19,8 @@ class Rt < Formula
 
   def caveats
     <<~EOS
-      Run the interactive setup to install a tunnel provider:
-        rt setup
-
-      Then start a session:
-        rt [session-name]
+      Start a session with:
+        rt
     EOS
   end
 
