@@ -24,15 +24,10 @@ Every session is protected by a random 128-bit token in the URL — no one can a
 
 ```bash
 brew install rafgirao/rt
+rt
 ```
 
-Then run the interactive setup to install a tunnel provider:
-
-```bash
-rt setup
-```
-
-It will ask you to choose between **ngrok**, **cloudflared**, or both, and install automatically. It also configures tmux for you.
+On first run, `rt` automatically detects that no tunnel provider is installed and launches an interactive setup — asking you to choose between **ngrok**, **cloudflared**, or both. After setup, the session starts immediately.
 
 ### Dependencies
 
@@ -47,17 +42,6 @@ Installed automatically by Homebrew:
 | `python@3` | Runs the clipboard bridge server |
 
 ## Usage
-
-### Setup
-
-```bash
-rt setup
-```
-
-Interactive wizard that:
-- Asks which tunnel provider to install (ngrok, cloudflared, or both)
-- Installs your choice via Homebrew
-- Configures `~/.tmux.conf` for multi-client support
 
 ### Start a session
 
@@ -139,6 +123,14 @@ Kills all processes (ttyd, Caddy, tunnel, clipboard server) and cleans up the se
 ```bash
 rt stop --all
 ```
+
+### Setup (manual)
+
+```bash
+rt setup
+```
+
+Re-run the tunnel provider setup at any time (e.g. to add cloudflared after initially choosing ngrok). Also configures `~/.tmux.conf`.
 
 ### Version
 
