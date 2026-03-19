@@ -8,6 +8,7 @@ class Cli < Formula
   depends_on "tmux"
   depends_on "ttyd"
   depends_on "caddy"
+  depends_on "cloudflared"
   depends_on "qrencode"
   depends_on "python@3"
   depends_on :macos
